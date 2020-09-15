@@ -56,12 +56,28 @@ def maximum_bipartite_matching_optimization(G):
 
 if __name__ == "__main__":
     G = nx.Graph()
+    
     # People
-    G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=0)
+    name_input = input("Enter names of people nodes seperated by commas: ")
+    G.add_nodes_from(list(name_input.replace(" ", "").split(",")), bipartite=0)
+    #G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=0)
+    
     # Organs
-    G.add_nodes_from(['o' + str(i) for i in range(4)], bipartite=1)
+    organ_input = input("Enter organ nodes seperated by commas: ")
+    G.add_nodes_from(list(organ_input.replace(" ", "").split(",")), bipartite=1)
+    #G.add_nodes_from(['o' + str(i) for i in range(4)], bipartite=1)
+    
     # Edges
-    G.add_edges_from([('p0', 'o0'), ('p1', 'o1'), ('p2', 'o1'), ('p2', 'o2')])
+    edges_input = input("Enter the first edge in the format person, organ: ")
+    edges_list = [tuple(edges_input.replace(" ", "").split(","))]
+    while(edges_input != 'done'):
+        edges_input = input("Enter the next edge in the format person, organ (type \"done\" when done): ")
+        if(edges_input != 'done'):
+            edges_list.append(tuple(edges_input.replace(" ", "").split(",")))
+
+    G.add_edges_from(edges_list)
+    #G.add_edges_from([('p0', 'o0'), ('p1', 'o1'), ('p2', 'o1'), ('p2', 'o2')])
+    
     matching_opt = maximum_bipartite_matching_optimization(G)
     print(matching_opt)
     matching_hk = nx.bipartite.hopcroft_karp_matching(G, top_nodes=[n for n in G.nodes if G.nodes[n]['bipartite'] == 0])
