@@ -18,6 +18,9 @@ def maximum_bipartite_matching_optimization(G):
     """
     # remove nodes with no edges as it messes up bipartite splitter
     left_set = [n for n in G.nodes if G.nodes[n]['bipartite'] == 0]
+    right_set = [n for n in G.nodes if G.nodes[n]['bipartite'] == 1]
+    # print("leftset ", left_set)
+    $ print("rightset ", right_set)
     model = GEKKO()
     variable_dict = {}
     for node in left_set:
@@ -28,12 +31,32 @@ def maximum_bipartite_matching_optimization(G):
             # make variables
             # lower bound 0 upper bound 1
             variable_dict[(node, neighbor)] = model.Var(lb=0, ub=1, integer=True)
+            variable_dict[(neighbor, node)] = model.Var(lb=0, ub=1, integer=True)
+            model.Equation(variable_dict[(node, neighbor)] - variable_dict[(neighbor, node)] == 0)
 
         tuples = [(node, i) for i in neighbors]
         # print(tuples)
         # Constraint that no node can be in matching twice
         if len(tuples) > 0:
             model.Equation(sum([variable_dict[tup] for tup in tuples]) <= 1.0)
+
+    for node in right_set:
+        neighbors = list(G.neighbors(node))
+        # print("Node is ", node)
+        # print("Neighbors are ", neighbors)
+        for neighbor in neighbors:
+            # make variables
+            # lower bound 0 upper bound 1
+            variable_dict[(node, neighbor)] = model.Var(lb=0, ub=1, integer=True)
+            model.Equation(variable_dict[(node, neighbor)] - variable_dict[(neighbor, node)] == 0)
+
+        tuples = [(node, i) for i in neighbors]
+        reversed_tuples = [(i, node) for i in neighbors]
+        # print(tuples)
+        # Constraint that no node can be in matching twice
+        if len(tuples) > 0:
+            model.Equation(sum([variable_dict[tup] for tup in tuples]) <= 1.0)
+
 
     # Objective
     model.Obj(-1 * sum([variable_dict[variable] for variable in variable_dict]))
@@ -49,8 +72,10 @@ def maximum_bipartite_matching_optimization(G):
     for variable in variable_dict.items():
         print(variable)
         if int(variable[1][0]) == 1:
+            # print("Adding ", variable)
             matching[variable[0][0]] = variable[0][1]
             matching[variable[0][1]] = variable[0][0]
+            # print("matching is ", matching)
     return matching
 
 
