@@ -20,7 +20,7 @@ def maximum_bipartite_matching_optimization(G):
     left_set = [n for n in G.nodes if G.nodes[n]['bipartite'] == 0]
     right_set = [n for n in G.nodes if G.nodes[n]['bipartite'] == 1]
     # print("leftset ", left_set)
-    $ print("rightset ", right_set)
+    # print("rightset ", right_set)
     model = GEKKO()
     variable_dict = {}
     for node in left_set:
