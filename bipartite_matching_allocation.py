@@ -1,5 +1,6 @@
 from gekko import GEKKO
 import networkx as nx
+import argparse
 
 
 def maximum_bipartite_matching_optimization(G):
@@ -81,13 +82,49 @@ def maximum_bipartite_matching_optimization(G):
 
 if __name__ == "__main__":
     G = nx.Graph()
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument ('-p', '--people', nargs='+', type=str)
+    parser.add_argument ('-o', '--organs', nargs='+', type=str)
+    parser.add_argument ('-e', '--edge', nargs=2, action='append', type=str)
+    
+    args = parser.parse_args()
+    people = args.people
+    organs = args.organs
+    edges = args.edge
+    
+    #args makes a list of lists, convert to list of tuples
+    for i in range(len(edges)):
+        edges[i] = tuple(edges[i])
+    
+    
     # People
-    G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=0)
+    #G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=0)
+    G.add_nodes_from(people, bipartite=0)
+    
     # Organs
-    G.add_nodes_from(['o' + str(i) for i in range(4)], bipartite=1)
+    #G.add_nodes_from(['o' + str(i) for i in range(4)], bipartite=1)
+    G.add_nodes_from(organs, bipartite=1)
+    
     # Edges
-    G.add_edges_from([('p0', 'o0'), ('p1', 'o1'), ('p2', 'o1'), ('p2', 'o2')])
+    #G.add_edges_from([('p0', 'o0'), ('p1', 'o1'), ('p2', 'o1'), ('p2', 'o2')])
+    G.add_edges_from(edges)
+    
     matching_opt = maximum_bipartite_matching_optimization(G)
     print(matching_opt)
     matching_hk = nx.bipartite.hopcroft_karp_matching(G, top_nodes=[n for n in G.nodes if G.nodes[n]['bipartite'] == 0])
     print(matching_hk)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
