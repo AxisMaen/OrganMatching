@@ -79,6 +79,20 @@ def maximum_bipartite_matching_optimization(G):
             # print("matching is ", matching)
     return matching
 
+#returns True if the given list has duplciates, False otherwise
+def checkDuplicates(nodes):
+    if len(nodes) == len(set(nodes)):
+        return False
+    else:
+        return True
+
+#returns True if nodes in an edge are not in people/organs, False otherwise
+def checkEdges(edges, people, organs):
+    for edge in edges:
+        if edge[0] not in people or edge[1] not in organs:
+            return True
+    return False
+            
 
 if __name__ == "__main__":
     G = nx.Graph()
@@ -96,6 +110,17 @@ if __name__ == "__main__":
     #args makes a list of lists, convert to list of tuples
     for i in range(len(edges)):
         edges[i] = tuple(edges[i])
+        
+    #error checking
+    if checkDuplicates(people + organs):
+        raise ValueError("Duplicate found in people/organ nodes")
+    
+    if checkEdges(edges, people, organs):
+        raise ValueError("Node in an edge does not exist in people or organ nodes (or edges nodes are in the wrong orders)")
+    
+    print(people)
+    print(organs)
+    print(edges)
     
     
     # People
