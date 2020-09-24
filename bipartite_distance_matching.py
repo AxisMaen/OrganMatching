@@ -3,17 +3,17 @@ import networkx as nx
 import argparse
 
 
-def maximum_bipartite_matching_optimization(G):
+def maximum_bipartite_matching_distance_optimization(G):
     """
     Performs LP optimization solving the maximum bipartite matching problem
     :param G: Bipartite Networkx graph G, need to specify which set each nodes by additional option
             EG: G = nx.Graph()
-                # People
-                G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=0) # Specifying that nodes in set 0
-                # Organs
-                G.add_nodes_from(['o' + str(i) for i in range(4)], bipartite=1) # Specifying that nodes in set 1
-                # Edges
-                G.add_edges_from([('p0', 'o0'), ('p1', 'o1'), ('p2', 'o1'), ('p2', 'o2')])
+                G.add_nodes_from(['o' + str(i) for i in range(5)], bipartite=0)
+                G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=1)
+                G.add_weighted_edges_from([('o0', 'p0', 1), ('o0', 'p1', 2), ('o1', 'p1', 3), ('o1', 'p2', 6), ('o2', 'p2', 5),
+                               ('o3', 'p3', 4), ('o4', 'p3', 6)])
+                First term in tuple is node in left set, 2nd term is node in right set, third term is weight of edge
+    matching_opt = maximum_bipartite_matching_distance_optimization(G)
 
     :return: dictionary of matching where key is node, value is node in other set, it contains (a,b) and (b,a)
     """
@@ -22,6 +22,7 @@ def maximum_bipartite_matching_optimization(G):
     right_set = [n for n in G.nodes if G.nodes[n]['bipartite'] == 1]
     # print("leftset ", left_set)
     # print("rightset ", right_set)
+    S = get_S(G)
     model = GEKKO()
     variable_dict = {}
     for node in left_set:
@@ -59,8 +60,9 @@ def maximum_bipartite_matching_optimization(G):
             model.Equation(sum([variable_dict[tup] for tup in tuples]) <= 1.0)
 
 
-    # Objective
-    model.Obj(-1 * sum([variable_dict[variable] for variable in variable_dict]))
+    # Objective (Only mainthing that changes from basic optimization to thing
+    model.Obj(-1 * sum([variable_dict[variable] * (S - G.get_edge_data(variable[0], variable[1])['weight'])
+                        for variable in variable_dict]))
 
     # Integer Solver
     model.options.SOLVER = 1
@@ -79,6 +81,36 @@ def maximum_bipartite_matching_optimization(G):
             # print("matching is ", matching)
     return matching
 
+
+def get_S(G):
+    """
+    Returns the S value or sum of all edge weights
+    :param G: Nx bipartite graph
+    :return: sum of all edge weights
+    """
+    S = 0
+    for edge in list(G.edges.data("weight", default=1)):
+        S += edge[2]
+    return S
+
+
+def test_distance():
+    """
+    Performs basic test to see if distance is being calculated properly
+    :return:
+    """
+    G = nx.Graph()
+    G.add_nodes_from(['o' + str(i) for i in range(5)], bipartite=0)
+    G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=1)
+    G.add_weighted_edges_from([('o0', 'p0', 1), ('o0', 'p1', 2), ('o1', 'p1', 3), ('o1', 'p2', 6), ('o2', 'p2', 5),
+                               ('o3', 'p3', 4), ('o4', 'p3', 6)])
+    matching_opt = maximum_bipartite_matching_distance_optimization(G)
+    print(matching_opt)
+    matching_hk = nx.bipartite.hopcroft_karp_matching(G, top_nodes=[n for n in G.nodes if G.nodes[n]['bipartite'] == 0])
+    print(matching_hk)
+    return
+
+
 #returns True if the given list has duplciates, False otherwise
 def checkDuplicates(nodes):
     if len(nodes) == len(set(nodes)):
@@ -94,62 +126,5 @@ def checkEdges(edges, people, organs):
     return False
 
 
-if __name__ == "__main__":
-    G = nx.Graph()
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument ('-p', '--people', nargs='+', type=str)
-    parser.add_argument ('-o', '--organs', nargs='+', type=str)
-    parser.add_argument ('-e', '--edge', nargs=2, action='append', type=str)
-    
-    args = parser.parse_args()
-    people = args.people
-    organs = args.organs
-    edges = args.edge
-    
-    #args makes a list of lists, convert to list of tuples
-    for i in range(len(edges)):
-        edges[i] = tuple(edges[i])
-        
-    #error checking
-    if checkDuplicates(people + organs):
-        raise ValueError("Duplicate found in people/organ nodes")
-    
-    if checkEdges(edges, people, organs):
-        raise ValueError("Node in an edge does not exist in people or organ nodes (or edges nodes are in the wrong orders)")
-    
-    print(people)
-    print(organs)
-    print(edges)
-    
-    
-    # People
-    #G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=0)
-    G.add_nodes_from(people, bipartite=0)
-    
-    # Organs
-    #G.add_nodes_from(['o' + str(i) for i in range(4)], bipartite=1)
-    G.add_nodes_from(organs, bipartite=1)
-    
-    # Edges
-    #G.add_edges_from([('p0', 'o0'), ('p1', 'o1'), ('p2', 'o1'), ('p2', 'o2')])
-    G.add_edges_from(edges)
-    
-    matching_opt = maximum_bipartite_matching_optimization(G)
-    print(matching_opt)
-    matching_hk = nx.bipartite.hopcroft_karp_matching(G, top_nodes=[n for n in G.nodes if G.nodes[n]['bipartite'] == 0])
-    print(matching_hk)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+if __name__ == '__main__':
+    test_distance()
