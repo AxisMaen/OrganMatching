@@ -1,6 +1,6 @@
 from gekko import GEKKO
 import networkx as nx
-import argparse
+import bipartite_arg_parse as argparse
 
 
 def maximum_bipartite_matching_distance_optimization(G):
@@ -94,16 +94,21 @@ def get_S(G):
     return S
 
 
-def test_distance():
+def test_distance(organs, people, edges):
     """
     Performs basic test to see if distance is being calculated properly
     :return:
     """
+    
     G = nx.Graph()
-    G.add_nodes_from(['o' + str(i) for i in range(5)], bipartite=0)
-    G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=1)
-    G.add_weighted_edges_from([('o0', 'p0', 1), ('o0', 'p1', 2), ('o1', 'p1', 3), ('o1', 'p2', 6), ('o2', 'p2', 5),
-                               ('o3', 'p3', 4), ('o4', 'p3', 6)])
+    
+    G.add_nodes_from(organs, bipartite=0)
+    G.add_nodes_from(people, bipartite=1)
+    G.add_weighted_edges_from(edges)
+    #G.add_nodes_from(['o' + str(i) for i in range(5)], bipartite=0)
+    #G.add_nodes_from(['p' + str(i) for i in range(4)], bipartite=1)
+    #G.add_weighted_edges_from([('o0', 'p0', 1), ('o0', 'p1', 2), ('o1', 'p1', 3), ('o1', 'p2', 6), ('o2', 'p2', 5),
+                               #('o3', 'p3', 4), ('o4', 'p3', 6)])
     matching_opt = maximum_bipartite_matching_distance_optimization(G)
     print(matching_opt)
     matching_hk = nx.bipartite.hopcroft_karp_matching(G, top_nodes=[n for n in G.nodes if G.nodes[n]['bipartite'] == 0])
@@ -127,4 +132,10 @@ def checkEdges(edges, people, organs):
 
 
 if __name__ == '__main__':
-    test_distance()
+    args = argparse.getArgs()
+    
+    organs = args[0]
+    people = args[1]
+    edges = args[2]
+    
+    test_distance(organs, people, edges)

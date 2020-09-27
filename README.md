@@ -18,5 +18,5 @@ Once in the correct directory, the program can be run by typing in the format "p
 Arguments:  
 -p: The names of the people nodes. For example, "-p p1 p2 p3" creates 3 people nodes, but each node can be named anything you want (no duplicates).  
 -o: The names of the organ nodes. Follows a similar format to the people nodes.  
--e: Creates an edge between people and organs. Each -e creates a single edge only and takes two arguments where the first is a person node and the second is an organ node.  
-For example, to create two edges you would type "-e p1 o1 -e p2 o2".
+-e: Creates a weighted edge between people and organs. Each -e creates a single edge only and takes two arguments where the first is an organ, the second is an person node, and the third is a distance integer.  
+For example, to create two edges with weights 2 and 3, you would type "-e o1 p1 2 -e o2 p2 3".
