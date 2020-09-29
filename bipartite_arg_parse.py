@@ -8,9 +8,9 @@ def checkDuplicates(nodes):
         return True
 
 #returns True if nodes in an edge are not in people/organs, False otherwise
-def checkEdges(edges, people, organs):
+def checkEdges(edges, nodes):
     for edge in edges:
-        if edge[1] not in people or edge[0] not in organs:
+        if edge[0] not in nodes or edge[1] not in nodes:
             return True
     return False
 
@@ -35,7 +35,7 @@ def getArgs():
     if checkDuplicates(people + organs):
         raise ValueError("Duplicate found in people/organ nodes")
     
-    if checkEdges(edges, people, organs):
-        raise ValueError("Node in an edge does not exist in people or organ nodes (or edges nodes are in the wrong orders)")
+    if checkEdges(edges, people + organs):
+        raise ValueError("Node in an edge does not exist in people or organ nodes")
         
     return [organs, people, edges]
