@@ -1,0 +1,51 @@
+name,sex,age,blood_group,weight,height,hospital,organ
+Leonardo DiCaprio,M,43,O,230,61,9,Cornea
+Tom Hanks,M,51,A,95,72,10,Liver
+Robert De Niro,M,51,O,195,75,11,Kidney
+Al Pacino,M,3,AB,140,49,12,Pancreas
+Natalie Portman,F,2,B,140,47,13,Heart
+Scarlett Johanson,F,3,AB,178,63,14,Heart
+Denzel Washington,M,90,AB,148,70,15,Liver
+Morgan Freeman,M,18,AB,165,76,16,Cornea
+Brad Pitt,M,50,A,97,53,17,Cornea
+Jenifer Lawrence,F,57,B,216,56,18,Heart
+Kate WInslet,F,59,A,209,71,0,Liver
+Emma Stone,F,64,AB,243,73,1,Liver
+Christian Bale ,M,52,AB,243,66,4,Lung
+Nicole Kidman,F,34,O,133,56,7,Cornea
+Julia Roberts,F,83,O,190,65,3,Pancreas
+Amy Adams,F,44,B,207,53,8,Kidney
+Matt Damon,M,33,AB,229,64,3,Liver
+Robert Downey Jr.,M,76,B,126,65,0,Lung
+Keira Knightly,F,68,B,161,55,0,Liver
+Johnny Depp,M,35,B,109,61,15,Lung
+Penelope Cruz,F,7,O,161,50,11,Pancreas
+Angelina Jolie,F,62,AB,134,63,11,Lung
+Robin Williams,M,52,AB,100,53,18,Lung
+Clint Eastwood,M,24,A,106,70,3,Lung
+Meryl Streep,F,88,B,169,71,15,Kidney
+Tom Cruise,M,86,B,104,77,18,Liver
+Margot Robie,F,40,B,123,75,17,Liver
+George Clooney,M,89,AB,246,64,19,Kidney
+Viola Davis,F,14,A,121,76,1,Pancreas
+Reese Witherspoon,F,45,AB,180,56,14,Lung
+Bradley Cooper,M,6,B,94,76,17,Liver
+Anne Hathaway,F,85,B,204,54,9,Kidney
+Russel Crowe,M,51,A,195,69,3,Heart
+Diane Keaton,F,15,A,100,47,9,Lung
+Matthew McConaghey,M,16,A,149,57,10,Lung
+Jennifer Aniston,F,48,O,192,48,14,Kidney
+Heath Ledger,M,28,AB,159,73,0,Liver
+Maggie Smith,F,12,AB,113,60,15,Pancreas
+Mila Kunis,F,66,AB,110,60,17,Lung
+Hugh Jackman,M,3,A,226,66,18,Heart
+Samuel L. Jackman,M,28,O,154,77,14,Lung
+Marilyn Munroe,F,4,B,133,53,1,Heart
+Will Smith,M,35,AB,131,55,14,Cornea
+Audrey Hepburn,F,46,O,238,49,15,Cornea
+Kevin Spacey,M,35,A,180,70,12,Heart
+Hilary Swank,F,20,A,110,53,18,Heart
+Kevin Hart,M,84,A,246,50,19,Kidney
+Emma Watson,F,11,AB,149,70,2,Heart
+Jack Nicholson,M,40,A,117,62,3,Cornea
+Halle Berry,F,68,B,232,70,6,Liver

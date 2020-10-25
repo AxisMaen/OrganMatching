@@ -1,4 +1,18 @@
-from geopy.geocoders import Nominatim
+from geopy.geocoders import Nominatim, MapBox, Bing
+
+
+class AddressNotFoundError(Exception):
+    """
+    Raised when coordinates are not converted to exceptions
+    """
+
+    def __init__(self, address, message='could not be converted to coordinates'):
+        self.address = address
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'{self.address} {self.message}'
 
 
 def get_coordinates_from_address(address):
@@ -9,7 +23,15 @@ def get_coordinates_from_address(address):
     """
     geolocator = Nominatim(user_agent="vivek")
     location = geolocator.geocode(address)
-    return location.latitude, location.longitude
+    if location is None:
+        geolocator2 = MapBox(api_key="pk.eyJ1Ijoidml2ZGFkZHkiLCJhIjoiY2tnbGtlNDFrMDJubTJ0cDd4NDZqeXBnMyJ9.WmwEq6ufsk_KqQXcXfqRFw")
+        location = geolocator2.geocode(address)
+        if location is None:
+            geolocator3 = Bing(api_key="AvNtmAt-6__O9J46nHtt2Py7bOgu8geabz5yOB_zxCn0Nq51Y085O-m_4hw_4Cik")
+            location = geolocator3.geocode(address)
+            if location is None:
+                raise AddressNotFoundError(address)
+    return str(location.latitude) + ',' + str(location.longitude)
 
 
 def get_address_from_coordinates(coordinates):
