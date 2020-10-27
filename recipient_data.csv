@@ -1,4 +1,4 @@
-patient_name,sex,age,blood_group,weight,height,hospital,organ
+name,sex,age,blood_group,weight,height,hospital,organ
 John Smith,M,54,B,139,56,1,Lung
 Shania Twain,F,90,A,113,63,3,Cornea
 Stevie Nicks,F,68,O,189,57,15,Cornea

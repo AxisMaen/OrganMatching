@@ -13,24 +13,16 @@ def read_data():
     :return: pandas df for donors, recipients, hospitals
     """
     donors = pd.read_csv('donor_data.csv')
-    donors['node_name'] = donors.apply(lambda x: get_node_name(x))
+    cols = ['name', 'age', 'hospital', 'organ']
+    donors['node_name'] = donors[cols].apply(lambda row: '_'.join(row.values.astype(str)), axis=1)
     recipients = pd.read_csv('recipient_data.csv')
-    recipients['node_name'] = recipients.apply(lambda x: get_node_name(x))
+    recipients['node_name'] = recipients[cols].apply(lambda row: '_'.join(row.values.astype(str)), axis=1)
     hospitals = pd.read_csv('hospitals_coordinates.csv')
     if not os.path.isfile("hospitals_coordinates.csv"):
         hospitals['coordinates'] = hospitals['address'].map(get_coordinates_from_address)
         # print(get_coordinates_from_address(hospitals['address'][4]))
         hospitals.to_csv("hospitals_coordinates.csv", index=False)
     return donors, recipients, hospitals
-
-
-def get_node_name(df):
-    """
-    Makes node_name in bipartite graph given dataframe
-    :param df: single entry of df
-    :return: node_name
-    """
-    return str(df['name'] + str(df['age']) + df['hospital'] + df['organ'])
 
 
 def get_compatible_recipients(G, donors, recipients, child_age, hospital_distance_matrix):
