@@ -5,6 +5,9 @@ import requests
 #returns a list of times from source coo
 
 #distance between source and dest cannot exceed 10000km
+
+#mapbox coords are (long,lat), should be roughly (-75, 40) +/- 5
+#this is BACKWARDS compared to google maps
 def doRequest(source_coord, dest_coords):
     
     base_path = "https://api.mapbox.com"
@@ -18,6 +21,12 @@ def doRequest(source_coord, dest_coords):
         coords = source_coord + ";" + dest_coord
         request_url = base_path + endpoint + profile + coords + "?" + access_token
         
+        #if source and dest are the same, manually return time of 0
+        #mapbox sometimes has errors when using same coords so we have to manually fix
+        if(source_coord == dest_coord): 
+             times.append("0")
+             continue
+        
         response = requests.get(request_url)
         json_data = response.json()
         
@@ -28,5 +37,7 @@ def doRequest(source_coord, dest_coords):
         
     return times
 
+
+#dests = ["-80.20292,40.45993"]
 #dests = ["-122.45,37.91", "-122.45,37.91", "-122.45,37.91"]
-#print(doRequest("-122.42,37.78", dests))
+#print(doRequest("-75.14158870992098,40.0368481", dests))
