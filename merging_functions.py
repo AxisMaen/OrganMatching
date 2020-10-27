@@ -21,6 +21,7 @@ def read_data():
         hospitals = pd.read_csv('hospital.csv')
         hospitals['coordinates'] = hospitals['address'].map(get_coordinates_from_address)
         # print(get_coordinates_from_address(hospitals['address'][4]))
+        hospitals['token'] = range(0, len(hospitals))
         hospitals.to_csv("hospitals_coordinates.csv", index=False)
     else:
         hospitals = pd.read_csv('hospitals_coordinates.csv')
