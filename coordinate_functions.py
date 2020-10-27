@@ -31,12 +31,12 @@ def get_coordinates_from_address(address):
             location = geolocator3.geocode(address)
             if location is None:
                 raise AddressNotFoundError(address)
-    return str(location.latitude) + ',' + str(location.longitude)
+    return str(location.longitude) + ',' + str(location.latitude)
 
 
 def get_address_from_coordinates(coordinates):
     """
-    Given coordinates returns address of location
+    Given coordinates returns addresgs of location
     :param coordinates: 2d tuple of coordinates
     :return: Address
     """

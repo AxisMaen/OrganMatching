@@ -17,11 +17,13 @@ def read_data():
     donors['node_name'] = donors[cols].apply(lambda row: '_'.join(row.values.astype(str)), axis=1)
     recipients = pd.read_csv('recipient_data.csv')
     recipients['node_name'] = recipients[cols].apply(lambda row: '_'.join(row.values.astype(str)), axis=1)
-    hospitals = pd.read_csv('hospitals_coordinates.csv')
     if not os.path.isfile("hospitals_coordinates.csv"):
+        hospitals = pd.read_csv('hospital.csv')
         hospitals['coordinates'] = hospitals['address'].map(get_coordinates_from_address)
         # print(get_coordinates_from_address(hospitals['address'][4]))
         hospitals.to_csv("hospitals_coordinates.csv", index=False)
+    else:
+        hospitals = pd.read_csv('hospitals_coordinates.csv')
     return donors, recipients, hospitals
 
 
@@ -40,7 +42,7 @@ def get_compatible_recipients(G, donors, recipients, child_age, hospital_distanc
     for index, donor_row in donors.iterrows():
         donor_age = donor_row['age']
         # get recipients with same blood group and organ as donor
-        possible_recipients = recipients[recipients['blood_group'] == donor_row['blood_group'] & donor_row['organ'] == recipients['organ']]
+        possible_recipients = recipients[(recipients['blood_group'] == donor_row['blood_group']) & (donor_row['organ'] == recipients['organ'])]
         # remove children from list of recipients if donor is not a kid
         if donor_age > child_age:
             possible_recipients = recipients[recipients['age'] > child_age]
@@ -69,8 +71,10 @@ def query_distance_between_hospitals(hospital_dict, hospitals):
     :return: updated hospital dictionary
     """
     for source_hospital, destination_hospitals in hospital_dict.items():
-        source_coordinates = hospitals[hospitals['token'] == source_hospital]['coordinates']
+        source_coordinates = hospitals[hospitals['token'] == source_hospital]['coordinates'].tolist()[0]
+        print("Source coordinates is", source_coordinates)
         destination_coordinates = list(hospitals[hospitals['token'].isin(destination_hospitals)]['coordinates'])
+        print(destination_coordinates)
         # print("Source coordinates is ", source_coordinates)
         # print("Destination coordinates is ", destination_coordinates)
         times = doRequest(source_coordinates, destination_coordinates)
@@ -116,6 +120,7 @@ def main():
     G = nx.Graph()
     #Get all compatible recipients for each donor
     G, hospital_dict = get_compatible_recipients(G, donors, recipients, 15, hospital_distance_matrix)
+    print(hospital_dict)
     # Query mapbox using matt's function for distances between relevant hospitals
     hospital_dict = query_distance_between_hospitals(hospital_dict, hospitals)
     # Add the times into the edges
