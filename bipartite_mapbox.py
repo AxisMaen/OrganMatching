@@ -13,8 +13,7 @@ def doRequest(source_coord, dest_coords):
     #coords = "-122.42,37.78;-122.45,37.91"  
     access_token = "access_token=pk.eyJ1IjoiYXhpczE3IiwiYSI6ImNrZnh5eHd5cDI2ZHAycW84bncya3A4YncifQ.wDVnZ5-pJ6iAayFHDrOUCQ"
     times = []
-
-
+    
     for dest_coord in dest_coords:
         coords = source_coord + ";" + dest_coord
         request_url = base_path + endpoint + profile + coords + "?" + access_token
@@ -22,11 +21,11 @@ def doRequest(source_coord, dest_coords):
         response = requests.get(request_url)
         json_data = response.json()
         
-        if(json_data["code"] != "Ok"):            
+        if("code" not in json_data.keys() or json_data["code"] != "Ok"):            
             raise Exception(json_data["message"])
         
         times.append(json_data["routes"][0]["duration"]) #most optimal time
-
+        
     return times
 
 #dests = ["-122.45,37.91", "-122.45,37.91", "-122.45,37.91"]
