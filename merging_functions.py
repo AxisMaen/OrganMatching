@@ -3,6 +3,7 @@ from bipartite_mapbox import doRequest
 import os.path
 import pandas as pd
 import networkx as nx
+import pickle
 import numpy as np
 from bipartite_distance_matching import maximum_bipartite_matching_distance_optimization
 
@@ -28,7 +29,7 @@ def read_data():
     return donors, recipients, hospitals
 
 
-def get_compatible_recipients(G, donors, recipients, child_age, hospital_distance_matrix):
+def get_compatible_recipients(G, donors, recipients, child_age, num_hospitals):
     """
     Gets the compatible recipients for each donor. Also adds placeholder edges to graph.
     :param G: Initialized Bipartite G
@@ -39,24 +40,25 @@ def get_compatible_recipients(G, donors, recipients, child_age, hospital_distanc
     :return: updated G, hospital dict with destinations to query
     """
     # initialize dictionary with various hospitals
-    hospital_dict = {new_list: set([]) for new_list in range(len(hospital_distance_matrix[0]))}
+    hospital_dict = {new_list: set([]) for new_list in range(num_hospitals)}
     for index, donor_row in donors.iterrows():
         donor_age = donor_row['age']
         # get recipients with same blood group and organ as donor
         possible_recipients = recipients[(recipients['blood_group'] == donor_row['blood_group']) & (donor_row['organ'] == recipients['organ'])]
         # remove children from list of recipients if donor is not a kid
         if donor_age > child_age:
-            possible_recipients = recipients[recipients['age'] > child_age]
+            possible_recipients = possible_recipients[possible_recipients['age'] > child_age]
         else:
-            possible_recipients = recipients[recipients['age'] <= child_age]
+            possible_recipients = possible_recipients[possible_recipients['age'] <= child_age]
         # Fill in various entries
         donor_hospital = donor_row['hospital']
         recipient_hospitals = set(possible_recipients['hospital'])
         donor_name = donor_row['node_name']
         # Add placeholder edges between donor and recipients with dummy edgges.
-        G.add_nodes_from([donor_row['node_name']], bipartite=0)
-        possible_recipients_names = list(possible_recipients['node_name'])
+        G.add_nodes_from([donor_name], bipartite=0)
+        possible_recipients_names = possible_recipients['node_name'].tolist()
         G.add_nodes_from(possible_recipients_names, bipartite=1)
+        # print("Possible recipients are ", possible_recipients_names)
         G.add_weighted_edges_from([(donor_name, recipient_name, -1) for recipient_name in possible_recipients_names])
         # Update hospital dict
         hospital_dict[donor_hospital] = hospital_dict[donor_hospital].union(set(possible_recipients['hospital']))
@@ -64,22 +66,29 @@ def get_compatible_recipients(G, donors, recipients, child_age, hospital_distanc
     return G, hospital_dict
 
 
-def query_distance_between_hospitals(hospital_dict, hospitals):
+def query_distance_between_hospitals(hospital_dict,  hospitals, query=False):
     """
     Wraps data for query to mapbox for distances between hospitals
     :param hospital_dict: dictionary with sources and destinations
     :param hospitals: dataframe of hospitals
+    :param query: boolean to indicate whether to query mapbox or not. If it doesn't it uses a cached version obtained
+                previous query in pickle file.
     :return: updated hospital dictionary
     """
-    for source_hospital, destination_hospitals in hospital_dict.items():
-        source_coordinates = hospitals[hospitals['token'] == source_hospital]['coordinates'].tolist()[0]
-        print("Source coordinates is", source_coordinates)
-        destination_coordinates = list(hospitals[hospitals['token'].isin(destination_hospitals)]['coordinates'])
-        print(destination_coordinates)
-        # print("Source coordinates is ", source_coordinates)
-        # print("Destination coordinates is ", destination_coordinates)
-        times = doRequest(source_coordinates, destination_coordinates)
-        hospital_dict[source_hospital] = list(times)
+    if query:
+        for source_hospital, destination_hospitals in hospital_dict.items():
+            hospital_dict[source_hospital] = sorted(list(hospital_dict[source_hospital]))
+            source_coordinates = hospitals[hospitals['token'] == source_hospital]['coordinates'].tolist()[0]
+            destination_coordinates = list(hospitals[hospitals['token'].isin(destination_hospitals)]['coordinates'])
+            # print("Source coordinates is ", source_coordinates)
+            # print("Destination coordinates is ", destination_coordinates)
+            times = doRequest(source_coordinates, destination_coordinates)
+            hospital_dict[source_hospital] = {destination: distance for destination, distance in zip(hospital_dict[source_hospital], times)}
+        with open("hospital_dict.pickle", 'wb') as f:
+            pickle.dump(hospital_dict, f)
+    else:
+        with open("hospital_dict.pickle", 'rb') as f:
+            hospital_dict = pickle.load(f)
     return hospital_dict
 
 
@@ -93,6 +102,7 @@ def update_edges(G, hospital_dict, donors, recipients):
     :return: updated G
     """
     edges = G.edges.data("weight", default=1)
+    # print("edges are ", edges)
     G.add_weighted_edges_from([(edge[0], edge[1], get_weight(donors, recipients, hospital_dict, edge)) for edge in edges])
     return G
 
@@ -106,7 +116,24 @@ def get_weight(donors, recipients, hospital_dict, edge):
     :param edge: each edge in the Graph
     :return: float
     """
-    return hospital_dict[donors['node_name'==edge[0]]['hospital']][recipients['node_name'==edge[1]]['hospital']]
+    # print(hospital_dict)
+    # print(donors)
+    donor = donors[donors['node_name'] == edge[0]]
+    # print(donors)
+    # print("donor: ", donor)
+    # print("edge is", edge)
+    # print(donor.empty)
+    if donor.empty:
+        donor = recipients[recipients['node_name'] == edge[0]]
+        recipient = donors[donors['node_name'] == edge[1]]
+        # print("donor is ", donor)
+        # print("recipient is ", recipient)
+        return hospital_dict[recipient.iloc[0]['hospital']][donor.iloc[0]['hospital']]
+    else:
+        recipient = recipients[recipients['node_name'] == edge[1]]
+        # print("donor is ", donor)
+        # print("recipient is ", recipient)
+        return hospital_dict[donor.iloc[0]['hospital']][recipient.iloc[0]['hospital']]
 
 
 def main():
@@ -114,21 +141,24 @@ def main():
     Runs the entire merged model together
     :return:
     """
+    print("Reading data")
     donors, recipients, hospitals = read_data()
-    # Hospital distances stored as a matrix
-    hospital_distance_matrix = np.full((len(hospitals), len(hospitals)), 0)
     # init graph
     G = nx.Graph()
-    #Get all compatible recipients for each donor
-    G, hospital_dict = get_compatible_recipients(G, donors, recipients, 15, hospital_distance_matrix)
-    print(hospital_dict)
+    # Get all compatible recipients for each donor
+    print("Getting potential recipients")
+    G, hospital_dict = get_compatible_recipients(G, donors, recipients, 15, len(hospitals))
     # Query mapbox using matt's function for distances between relevant hospitals
-    hospital_dict = query_distance_between_hospitals(hospital_dict, hospitals)
+    print("Querying mapbox")
+    hospital_dict = query_distance_between_hospitals(hospital_dict, hospitals, query=True)
     # Add the times into the edges
+    print("G edges are ", G.edges.data("weight", default=1))
+    print("Updating Graph with times")
     G = update_edges(G, hospital_dict, donors, recipients)
     # Run optimization model
+    print("Running optimization model")
     matching = maximum_bipartite_matching_distance_optimization(G)
-    print(matching)
+    print("Matching is \n",matching)
     return
 
 
