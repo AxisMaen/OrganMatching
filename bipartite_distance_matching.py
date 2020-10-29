@@ -61,7 +61,7 @@ def maximum_bipartite_matching_distance_optimization(G):
 
 
     # Objective (Only mainthing that changes from basic optimization to thing
-    model.Obj(-1 * sum([variable_dict[variable] * (S - G.get_edge_data(variable[0], variable[1])['weight'])
+    model.Obj(-1 * sum([variable_dict[variable] * (S - float(G.get_edge_data(variable[0], variable[1])['weight']))
                         for variable in variable_dict]))
 
     # Integer Solver
@@ -90,7 +90,7 @@ def get_S(G):
     """
     S = 0
     for edge in list(G.edges.data("weight", default=1)):
-        S += edge[2]
+        S += float(edge[2])
     return S
 
 
