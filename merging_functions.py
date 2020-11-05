@@ -6,7 +6,7 @@ import networkx as nx
 import pickle
 import numpy as np
 from bipartite_distance_matching import maximum_bipartite_matching_distance_optimization
-
+import csv
 
 def read_data():
     """
@@ -159,6 +159,9 @@ def main():
     print("Running optimization model")
     matching = maximum_bipartite_matching_distance_optimization(G)
     print("Matching is \n",matching)
+    w = csv.writer(open("output.csv", "w+"))
+    for key, val in matching.items():
+        w.writerow([key, val])
     return
 
 
