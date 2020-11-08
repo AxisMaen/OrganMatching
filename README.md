@@ -5,7 +5,11 @@ https://www.python.org/downloads/
 
 To verify that Python is installed, open your command prompt or terminal and type "python" (no quotes). If you encounter an error, Python is not correctly installed.
 
-This program depends on GEKKO Optimization Suite, NetworkX, and GeoPy. This can be installed by typing "pip install gekko", "pip install networkx", and "pip install geopy".  
+This program depends on GEKKO Optimization Suite, NetworkX, Panadas, and GeoPy. These can be installed with the following commands:  
+pip install gekko  
+pip install networkx  
+pip install pandas  
+pip install geopy  
 
 To view the Python files themselves, almost any text editor or Python IDE can be used. PyCharm is usually a popular one. https://www.jetbrains.com/pycharm/  
 
