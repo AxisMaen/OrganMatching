@@ -162,8 +162,9 @@ def main():
     w = csv.writer(open("output.csv", "w+"))
     for key, val in matching.items():
         w.writerow([key, val])
-    return
+    
+    return (matching, hospital_dict)
 
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+   # main()
