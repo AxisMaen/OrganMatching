@@ -9,7 +9,7 @@ app = Flask(__name__)
 This version returns a dictionary with one key (hospitals).
 The value at this key is a list where each entry is a dictionary (1 per hospital).
 This subdictionary has name and value keys.
-
+'''
 @app.route('/hospitals', methods=['GET'])
 def getHospitals():
     
@@ -25,12 +25,13 @@ def getHospitals():
     
     hospitals['hospitals'] = entries
     return jsonify(hospitals)
-'''
+
 
 '''
 This is an alternate version since I wasn't sure which was better.
 This version returns a dictionary where each key is the name of the hospital
 and the value is a dictionary with an address key
+'''
 '''
 @app.route('/hospitals', methods=['GET'])
 def getHospitals():
@@ -44,6 +45,7 @@ def getHospitals():
             hospitals[row[0]] = {'Address' : row[1]}
         
     return jsonify(hospitals)
+'''
 
 '''
 Returns a dictionary with one key (organs).
@@ -98,8 +100,14 @@ def getPatients():
     organs['patients'] = entries
     return jsonify(organs)
 
-@app.route('/matching', methods=['GET'])
-def getMatching():
+'''
+Returns the full matching for all patients.
+This function may take a few seconds to run, as it runs the
+matching model rather than pulling from a file.
+The updated matching is saved to output.csv.
+'''
+@app.route('/update', methods=['GET'])
+def updateMatching():
     matching, hospital_dict = model.main() #runs the matching model
     fixed_matching = {}
     entries = []
@@ -141,6 +149,35 @@ def getMatching():
     fixed_matching['matchings'] = entries
     
     return jsonify(fixed_matching)
+
+'''
+Given a recipient's name and organ, returns a pairing.
+This function is fast and does not get a live update from the matching.
+If the nodes in the model were changed and an update was not run, the
+returned pair could be incorrect.
+
+Remove the space between first and last name when calling.
+Ex: http://127.0.0.1:8080/matching/JackNicholson/Cornea
+
+If no pairing is found, 'No Pair Found' is returned.
+'''
+
+
+@app.route('/matching/<string:name>/<string:organ>')
+def getMatch(name, organ):
+    
+    name.replace(" ", "")
+    
+    with open('output.csv') as file:
+        reader = csv.reader(file, delimiter=',')
+        
+        for row in reader:
+            if(row == []):
+                continue
+            if(name in row[0].replace(" ", "") and organ in row[0]):
+                return jsonify(row)
+                           
+        return("No Pair Found")
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080, use_reloader=False)
