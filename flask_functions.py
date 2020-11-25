@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 import csv
+import pickle
 import merging_functions as model
+
 
 app = Flask(__name__)
 
@@ -108,43 +110,36 @@ The updated matching is saved to output.csv.
 '''
 @app.route('/update', methods=['GET'])
 def updateMatching():
-    matching, hospital_dict = model.main() #runs the matching model
+    matching = model.main() #runs the matching model
     fixed_matching = {}
     entries = []
     
+    hospital_dict = {}
+    
+    with open('hospital_dict.pickle', 'rb') as file:
+        hospital_dict = pickle.load(file)
+    
     for key in matching:
-        key_name, key_age, key_index, key_organ = key.split("_")
-        val_name, val_age, val_index, val_organ = matching[key].split("_")
+        donor_name, donor_age, donor_index, donor_organ = key.split("_")
+        recipient_name, recipient_age, recipient_index, recipient_organ = matching[key].split("_")
         
-        key_index = int(key_index)
-        val_index = int(val_index)
-        
-        if(key_index not in hospital_dict.keys() or val_index not in hospital_dict[key_index].keys()):
-            eta = hospital_dict[val_index][key_index]
-        else:
-            eta = hospital_dict[key_index][val_index]
-        
-        
-        with open('hospitals_coordinates.csv') as file:
-            reader = csv.reader(file, delimiter=',')
-            next(reader) #skip first row (header)
+        donor_index = int(donor_index)
+        recipient_index = int(recipient_index)
             
-            #get coords for each hospital index
-            hospital_coords = []
-            for row in reader:
-                hospital_coords.append(row[2])
+        eta = getETA(donor_index, recipient_index)              
+        hospital_coords = getHospitalCoords()
             
-            entries.append({'donor_name' : key_name,
-                        'donor_age' : key_age,
-                        'donor_index' : str(key_index),
-                        'donor_organ' : key_organ,
-                        'recipient_name' : val_name,
-                        'recipient_age' : val_age,
-                        'recipient_index' : str(val_index),
-                        'recipient_organ' : val_organ,
+        entries.append({'donor_name' : donor_name,
+                        'donor_age' : donor_age,
+                        'donor_index' : str(donor_index),
+                        'donor_organ' : donor_organ,
+                        'recipient_name' : recipient_name,
+                        'recipient_age' : recipient_age,
+                        'recipient_index' : str(recipient_index),
+                        'recipient_organ' : recipient_organ,
                         'eta' : eta,
-                        'donor_coords' : hospital_coords[key_index],
-                        'recipient_coords' : hospital_coords[val_index]})
+                        'donor_coords' : hospital_coords[donor_index],
+                        'recipient_coords' : hospital_coords[recipient_index]})
         
     fixed_matching['matchings'] = entries
     
@@ -161,10 +156,9 @@ Ex: http://127.0.0.1:8080/matching/JackNicholson/Cornea
 
 If no pairing is found, 'No Pair Found' is returned.
 '''
-
-
 @app.route('/matching/<string:name>/<string:organ>')
 def getMatch(name, organ):
+    pair = {}
     
     name.replace(" ", "")
     
@@ -175,9 +169,67 @@ def getMatch(name, organ):
             if(row == []):
                 continue
             if(name in row[0].replace(" ", "") and organ in row[0]):
-                return jsonify(row)
+                recipient_name, recipient_age, recipient_index, recipient_organ = row[0].split("_")
+                donor_name, donor_age, donor_index, donor_organ = row[1].split("_")
+                
+                donor_index = int(donor_index)
+                recipient_index = int(recipient_index)
+                
+                hospital_coords = getHospitalCoords()
+                
+                entry = [{ "donor_age" : donor_age,
+                          "donor_coords" : hospital_coords[donor_index],
+                          "donor_index" : donor_index,
+                          "donor_name" : donor_name,
+                          "donor_organ" : donor_organ,
+                          "eta" : getETA(donor_index, recipient_index),
+                          "recipient_age" : recipient_age,
+                          "recipient_coords" : hospital_coords[recipient_index],
+                          "recipient_index" : recipient_index,
+                          "recipient_name" : recipient_name,
+                          "recipient_organ" : recipient_organ             
+                    }]
+                
+                pair["matching"] = entry
+                
+                return jsonify(pair)
                            
         return("No Pair Found")
+
+'''
+Helper function that returns dictionary of hospital coordinates
+The ith position of the returned array contains the coords for
+the hospital with index i.
+'''
+def getHospitalCoords():
+    with open('hospitals_coordinates.csv') as file:
+            reader = csv.reader(file, delimiter=',')
+            next(reader) #skip first row (header)
+            
+            #get coords for each hospital index
+            hospital_coords = []
+            for row in reader:
+                hospital_coords.append(row[2])
+            
+            return hospital_coords
+
+'''
+Helper function that returns the ETA between two hospital indices (ints).
+The result is from the saved hospital_dict.pickle file that is saved
+when a matching update is run. There could potentially be a more optimal
+ETA if there has not been an update recently.
+'''
+def getETA(source_index, dest_index):
+    with open('hospital_dict.pickle', 'rb') as file:
+        hospital_dict = pickle.load(file)
+        
+        if(source_index not in hospital_dict.keys() or dest_index not in hospital_dict[source_index].keys()):
+            eta = hospital_dict[dest_index][source_index]
+        else:
+            eta = hospital_dict[source_index][dest_index]
+        
+        return eta
+    
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080, use_reloader=False)

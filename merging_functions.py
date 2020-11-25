@@ -163,8 +163,7 @@ def main():
     for key, val in matching.items():
         w.writerow([key, val])
     
-    return (matching, hospital_dict)
+    return matching
 
-
-#if __name__ == '__main__':
-    #main()
+if __name__ == '__main__':
+    main()
