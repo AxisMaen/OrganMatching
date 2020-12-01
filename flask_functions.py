@@ -133,13 +133,16 @@ def updateMatching():
                         'donor_age' : donor_age,
                         'donor_index' : str(donor_index),
                         'donor_organ' : donor_organ,
+                        "donor_hospital" : getHospitalName(donor_index),
                         'recipient_name' : recipient_name,
                         'recipient_age' : recipient_age,
                         'recipient_index' : str(recipient_index),
                         'recipient_organ' : recipient_organ,
                         'eta' : eta,
                         'donor_coords' : hospital_coords[donor_index],
-                        'recipient_coords' : hospital_coords[recipient_index]})
+                        'recipient_coords' : hospital_coords[recipient_index],
+                        "recipient_hospital" : getHospitalName(recipient_index)
+                        })
         
     fixed_matching['matchings'] = entries
     
@@ -177,18 +180,20 @@ def getMatch(name, organ):
                 
                 hospital_coords = getHospitalCoords()
                 
-                entry = [{ "donor_age" : donor_age,
+                entry = [{"donor_age" : donor_age,
                           "donor_coords" : hospital_coords[donor_index],
                           "donor_index" : donor_index,
                           "donor_name" : donor_name,
                           "donor_organ" : donor_organ,
+                          "donor_hospital" : getHospitalName(donor_index),
                           "eta" : getETA(donor_index, recipient_index),
                           "recipient_age" : recipient_age,
                           "recipient_coords" : hospital_coords[recipient_index],
                           "recipient_index" : recipient_index,
                           "recipient_name" : recipient_name,
-                          "recipient_organ" : recipient_organ             
-                    }]
+                          "recipient_organ" : recipient_organ,
+                          "recipient_hospital" : getHospitalName(recipient_index)
+                          }]
                 
                 pair["matching"] = entry
                 
@@ -212,6 +217,20 @@ def getHospitalCoords():
                 hospital_coords.append(row[2])
             
             return hospital_coords
+'''
+Helper function that returns string with hospital name
+given the index of the hospital.
+'''       
+def getHospitalName(index):
+    with open('hospitals_coordinates.csv') as file:
+            reader = csv.reader(file, delimiter=',')
+            next(reader) #skip first row (header)
+            
+            current_index = 0
+            for row in reader:
+                if(index == current_index):
+                    return row[0]
+                current_index = current_index + 1
 
 '''
 Helper function that returns the ETA between two hospital indices (ints).
